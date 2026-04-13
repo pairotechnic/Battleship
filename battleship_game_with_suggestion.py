@@ -6,30 +6,11 @@ import pygame
 
 # Local Application Imports
 from core.config import *
+from core.board import create_ocean_grid, create_screen_grid, create_ship_info
 
-ocean_grid = []
-screen_grid = []
-
-ship_info = []
-
-for row in range(10): #insert 0 in every position of the 3D array ocean_grid[row][column][val]
-    ocean_grid.append([])
-    for column in range(10):
-        ocean_grid[row].append([])
-        for val in range(3):
-            ocean_grid[row][column].append(0)
-
-for row in range(10): #insert 0 in every position of the 2D array ocean_grid[row][column]
-    screen_grid.append([])
-    for column in range(10):
-        screen_grid[row].append([])
-        for values in range(2):
-            screen_grid[row][column].append(0)
-
-for order in range(5): #insert 0 in every position of the 2D array ocean_grid[row][column]
-    ship_info.append([])
-    for details in range(5):
-        ship_info[order].append(0)
+ocean_grid = create_ocean_grid()
+screen_grid = create_screen_grid()
+ship_info = create_ship_info()
 
 pygame.init()
 
