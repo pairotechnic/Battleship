@@ -1,5 +1,6 @@
 # Standard Library Imports
 import math
+from datetime import datetime
 
 # Third-Party Library Imports
 import pygame
@@ -21,7 +22,7 @@ pygame.display.set_caption("BATTLESHIP : The Classic Naval Combat Game")
 
 done = False
 placed = 0
-orientation = 1
+orientation = "horizontal"
 across = 1
 down = 0
 order = 0
@@ -33,103 +34,125 @@ clock = pygame.time.Clock()
 
 #Place Ships (First Battleship)
 while placed != 5: 
+
+    overlap = False
+    out_of_bounds = False
+
     for event in pygame.event.get(): 
         pos = pygame.mouse.get_pos()
 
         for row in range(0,10):
             for column in range(0,10):
-                for val in range(0,3):
-                    ocean_grid[row][column][2] = 0 #reset temperary color value of all squares to 0
+                ocean_grid[row][column]["preview"] = None #reset temperary color value of all squares to 0
 
-        if event.type == pygame.QUIT: #quit program condition
+        # quit program condition
+        if (
+            event.type == pygame.QUIT or
+            (
+                event.type == pygame.KEYUP and
+                event.key == pygame.K_q
+            )
+        ):
             placed = 5
             done = True
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-            orientation = 0
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+            orientation = "vertical"
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-            orientation = 1
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+            orientation = "horizontal"
 
-        
-        elif event.type == pygame.MOUSEMOTION and pos[0] > 15*UNIT and pos[0] < 25*UNIT and pos[1] > 2*UNIT and pos[1] < 12*UNIT:
+        elif (
+            event.type in (pygame.MOUSEMOTION, pygame.KEYUP, pygame.MOUSEBUTTONUP) and 
+            15*UNIT < pos[0] < 25*UNIT and 
+            2*UNIT < pos[1] < 12*UNIT
+        ):
             column = (pos[0] - 15*UNIT)// UNIT 
             row = (pos[1] - 2*UNIT)// UNIT
-            
-            overlap = 0
-            out_of_bounds = 0
 
-            if orientation == 1:
+            if orientation == "horizontal":
                 if column >= 11 - ship_len[placed]:
                     for i in range (column,10):
-                        ocean_grid[row][i][2] = 2
-                        out_of_bounds = 1
+                        ocean_grid[row][i]["preview"] = "invalid"
+                        out_of_bounds = True
 
                 elif column < 11 - ship_len[placed]:
                     for i in range (0,ship_len[placed]):
-                        if ocean_grid[row][column+i][0] == 1:
-                            overlap = 1
+                        if ocean_grid[row][column+i]["has_ship"]:
+                            overlap = True
             
-                    if overlap == 0:
+                    if not overlap:
                         for i in range (0,ship_len[placed]):
-                            ocean_grid[row][column+i][2] = 1
+                            ocean_grid[row][column+i]["preview"] = "valid"
 
-                    elif overlap == 1:
+                    elif overlap:
                         for i in range (0,ship_len[placed]):
-                            ocean_grid[row][column+i][2] = 2
+                            ocean_grid[row][column+i]["preview"] = "invalid"
 
-            elif orientation == 0:
+            elif orientation == "vertical":
                 if row >= 11 - ship_len[placed]:
                     for i in range (row,10):
-                        ocean_grid[i][column][2] = 2
-                        out_of_bounds = 1
+                        ocean_grid[i][column]["preview"] = "invalid"
+                        out_of_bounds = True
 
                 elif row < 11 - ship_len[placed]:
                     for i in range (0,ship_len[placed]):
-                        if ocean_grid[row+i][column][0] == 1:
-                            overlap = 1
+                        if ocean_grid[row+i][column]["has_ship"]:
+                            overlap = True
             
-                    if overlap == 0:
+                    if not overlap:
                         for i in range (0,ship_len[placed]):
-                            ocean_grid[row+i][column][2] = 1
+                            ocean_grid[row+i][column]["preview"] = "valid"
 
-                    elif overlap == 1:
+                    elif overlap:
                         for i in range (0,ship_len[placed]):
-                            ocean_grid[row+i][column][2] = 2
+                            ocean_grid[row+i][column]["preview"] = "invalid"
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and pos[0] > 15*UNIT and pos[0] < 25*UNIT and pos[1] > 2*UNIT and pos[1] < 12*UNIT and out_of_bounds == 0 and overlap == 0:
+            if event.type == pygame.MOUSEBUTTONUP:
+                print(f"out_of_bounds : {out_of_bounds}")
+                print(f"overlap : {overlap}")
+
+        elif (
+            event.type == pygame.MOUSEBUTTONDOWN and 
+            event.button == LEFT and 
+            15*UNIT < pos[0] < 25*UNIT and 
+            2*UNIT < pos[1] < 12*UNIT and 
+            not out_of_bounds and 
+            not overlap
+        ):
+            print(f"button down event triggerred : {datetime.now()}")
+            print(f"out_of_bounds : {out_of_bounds}")
+            print(f"overlap : {overlap}")
             column = (pos[0] - 15*UNIT)// UNIT
             row = (pos[1] - 2*UNIT)// UNIT
 
-            ship_info[index][0] = row
-            ship_info[index][1] = column
-            ship_info[index][2] = orientation
-            ship_info[index][3] = ship_len[placed]
-            ship_info[index][4] = 0
+            ship_info[index]["row"] = row
+            ship_info[index]["col"] = column
+            ship_info[index]["orientation"] = orientation
+            ship_info[index]["length"] = ship_len[placed]
+            ship_info[index]["hits"] = 0
             
             index += 1
 
-            if orientation == 1:
+            if orientation == "horizontal":
                 for i in range (0,ship_len[placed]):
-                    ocean_grid[row][column+i][0] = 1
-                    #ship_info[0]
+                    ocean_grid[row][column+i]["has_ship"] = True
             
-            elif orientation == 0:
+            elif orientation == "vertical":
                 for i in range (0,ship_len[placed]):
-                    ocean_grid[row+i][column][0] = 1
-
+                    ocean_grid[row+i][column]["has_ship"] = True
+            
             placed += 1
 
-        screen.fill(BLACK)
-
         
+        screen.fill(BLACK)
 
         for row in range(0,10):
             for column in range(0,10):
                 color = DARK_GREEN
-                if screen_grid[row][column] == 1:
+                if screen_grid[row][column]["shot"] == "miss":
                     color = WHITE
-                elif screen_grid[row][column] == 3:
+                elif screen_grid[row][column]["shot"] == "hit":
                     color = RED
                 pygame.draw.rect(screen, color, [2*UNIT+(UNIT * column) , (2*UNIT)+UNIT * row, BLOCK_SIZE, BLOCK_SIZE])
 
@@ -137,9 +160,10 @@ while placed != 5:
             for column in range(0,10):
                 color = DARK_BLUE
             
-                if ocean_grid[row][column][2] == 2:
+                if ocean_grid[row][column]["preview"] == "invalid":
                     color = RED
-                elif  ocean_grid[row][column][2] == 1 or ocean_grid[row][column][0] == 1:
+                    
+                elif ocean_grid[row][column]["preview"] == "valid" or ocean_grid[row][column]["has_ship"]:
                     color = GREY
                 pygame.draw.rect(screen, color, [15*UNIT + UNIT * column ,(2*UNIT)+ UNIT * row, BLOCK_SIZE, BLOCK_SIZE])
 
@@ -172,39 +196,49 @@ while not done:
         if event.type == pygame.QUIT:  
             done = True
         
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and pos[0] > 15*UNIT and pos[0] < 25*UNIT and pos[1] > 2*UNIT and pos[1] < 12*UNIT:
+        elif (
+            event.type == pygame.MOUSEBUTTONDOWN and 
+            event.button == LEFT and 
+            15*UNIT < pos[0] < 25*UNIT and 
+            2*UNIT < pos[1] < 12*UNIT
+        ):
             column = (pos[0] - 15*UNIT)// UNIT 
             row = (pos[1] - 2*UNIT)// UNIT
-            if (ocean_grid[row][column][1] != 1 and ocean_grid[row][column][1] != 3 and ocean_grid[row][column][0] == 0):
-                ocean_grid[row][column][1] = 1
+            if (ocean_grid[row][column]["shot"] != "miss" and ocean_grid[row][column]["shot"] != "hit" and not ocean_grid[row][column]["has_ship"]):
+                ocean_grid[row][column]["shot"] = "miss"
                 print("Opponent's Turn : ", Letter[row], Number[column], "MISS")
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and pos[0] > 15*UNIT and pos[0] < 25*UNIT and pos[1] > 2*UNIT and pos[1] < 12*UNIT:
+        elif (
+            event.type == pygame.MOUSEBUTTONDOWN and 
+            event.button == RIGHT and 
+            15*UNIT < pos[0] < 25*UNIT and 
+            2*UNIT < pos[1] < 12*UNIT
+        ):
             column = (pos[0] - 15*UNIT)// UNIT
             row = (pos[1] - 2*UNIT)// UNIT
-            if (ocean_grid[row][column][1] != 1 and ocean_grid[row][column][1] != 3 and ocean_grid[row][column][0] == 1):
-                ocean_grid[row][column][1] = 3 # hit
-                #if ship_info[index]
+            if (ocean_grid[row][column]["shot"] != "miss" and ocean_grid[row][column]["shot"] != "hit" and ocean_grid[row][column]["has_ship"]):
+                ocean_grid[row][column]["shot"] = "hit" # hit
+
                 for i in range(5):
-                    if ship_info[i][2] == 1:
-                        for j in range (ship_info[i][3]):
-                            if (row == ship_info[i][0] and column == ship_info[i][1] + j):
+                    if ship_info[i]["orientation"] == "horizontal":
+                        for j in range (ship_info[i]["length"]):
+                            if (row == ship_info[i]["row"] and column == ship_info[i]["col"] + j):
                                 check_i = i
 
-                    elif ship_info[i][2] == 0:
-                        for j in range (ship_info[i][3]):
-                            if (row == ship_info[i][0] + j and column == ship_info[i][1]):
+                    elif ship_info[i]["orienation"] == "vertical":
+                        for j in range (ship_info[i]["length"]):
+                            if (row == ship_info[i]["row"] + j and column == ship_info[i]["row"]):
                                 check_i = i
                                 
                 if check_i != 10:
-                    if ship_info[check_i][2] == 1:
-                        for j in range (ship_info[check_i][3]):
-                            if ocean_grid[ship_info[check_i][0]][ship_info[check_i][1] + j][1] == 0:
+                    if ship_info[check_i]["orientation"] == "horizontal":
+                        for j in range (ship_info[check_i]["length"]):
+                            if not ocean_grid[ship_info[check_i]["row"]][ship_info[check_i]["col"] + j]["shot"]:
                                 sink_status = 0
 
-                    elif ship_info[check_i][2] == 0:
-                        for j in range (ship_info[check_i][3]):
-                            if ocean_grid[ship_info[check_i][0] + j][ship_info[check_i][1]][1] == 0:
+                    elif ship_info[check_i]["orientation"] == "vertical":
+                        for j in range (ship_info[check_i]["length"]):
+                            if not ocean_grid[ship_info[check_i]["row"] + j][ship_info[check_i]["col"]]["shot"]:
                                 sink_status = 0
 
                 if sink_status == 0:
@@ -212,21 +246,31 @@ while not done:
                 elif sink_status == 1:
                     print("Opponent's Turn : ", Letter[row], Number[column], "HIT", "SINK")
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and pos[0] > 2*UNIT and pos[0] < 12*UNIT and pos[1] > 2*UNIT and pos[1] < 12*UNIT:
+        elif (
+            event.type == pygame.MOUSEBUTTONDOWN and 
+            event.button == LEFT and 
+            pos[0] > 2*UNIT and pos[0] < 12*UNIT and 
+            pos[1] > 2*UNIT and pos[1] < 12*UNIT
+        ):
             column = (pos[0] - 2*UNIT)// UNIT
             row = (pos[1] - 2*UNIT)// UNIT
-            if (screen_grid[row][column][0] != 1 and screen_grid[row][column][0] != 3):
-                screen_grid[row][column][0] = 1
-                screen_grid[row][column][1] = 0
+            if (screen_grid[row][column]["shot"] != "miss" and screen_grid[row][column]["shot"] != "hit"):
+                screen_grid[row][column]["shot"] = "miss"
+                screen_grid[row][column]["score"] = 0
                 turns += 1
                 print("My turn         : ", Letter[row], Number[column], "MISS")
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and pos[0] > 2*UNIT and pos[0] < 12*UNIT and pos[1] > 2*UNIT and pos[1] < 12*UNIT:
+        elif (
+            event.type == pygame.MOUSEBUTTONDOWN and 
+            event.button == RIGHT and 
+            2*UNIT < pos[0] < 12*UNIT and 
+            2*UNIT < pos[1] < 12*UNIT
+        ):
             column = (pos[0] - 2*UNIT)// UNIT 
             row = (pos[1] - 2*UNIT)// UNIT
-            if (screen_grid[row][column][0] != 1 and screen_grid[row][column][0] != 3):
-                screen_grid[row][column][0] = 3
-                screen_grid[row][column][1] = 0
+            if (screen_grid[row][column]["shot"] != "miss" and screen_grid[row][column]["shot"] != "hit"):
+                screen_grid[row][column]["shot"] = "hit"
+                screen_grid[row][column]["score"] = 0
                 turns += 1
                 print("My turn         : ", Letter[row], Number[column], "HIT")
         
@@ -239,40 +283,39 @@ while not done:
 
         for row in range(10):
             for column in range(10):
-                screen_grid[row][column][1] = 0
+                screen_grid[row][column]["score"] = 0
 
         for i in range(5):
             for j in range(11-ship_len[i]):
                 for k in range(10):
-                    #for orientation == 1 and 0 positions:
                     valid_hor = 1
                     valid_vert = 1
                     for inc in range (0,ship_len[i]):
-                        if screen_grid[k][j+inc][0] == 1 or screen_grid[k][j+inc][0] == 3:
+                        if screen_grid[k][j+inc]["shot"] == "miss" or screen_grid[k][j+inc]["shot"] == "hit":
                             valid_hor = 0
-                        if screen_grid[j+inc][k][0] == 1 or screen_grid[k][j+inc][0] == 3:
+                        if screen_grid[j+inc][k]["shot"] == "miss" or screen_grid[k][j+inc]["shot"] == "hit":
                             valid_vert = 0
 
                     if valid_hor == 1:
                         for inc in range (0,ship_len[i]):
-                            if screen_grid[k][j+inc][0] == 0:
-                                screen_grid[k][j+inc][1] += 1
+                            if not screen_grid[k][j+inc]["shot"]:
+                                screen_grid[k][j+inc]["score"] += 1
                     if valid_vert == 1:
                         for inc in range (0,ship_len[i]):
-                            if screen_grid[j+inc][k][0] == 0:
-                                screen_grid[j+inc][k][1] += 1
+                            if not screen_grid[j+inc][k]["shot"]:
+                                screen_grid[j+inc][k]["score"] += 1
 
         for row in range(10):
             for column in range(10):
-                total_val += screen_grid[row][column][1]
-                if screen_grid[row][column][1] > max_val:
-                    max_val = screen_grid[row][column][1]
+                total_val += screen_grid[row][column]["score"]
+                if screen_grid[row][column]["score"] > max_val:
+                    max_val = screen_grid[row][column]["score"]
 
         for row in range(10):
             if loop_break == 1:
                 break
             for column in range(10):
-                if screen_grid[row][column][1] == max_val:
+                if screen_grid[row][column]["score"] == max_val:
                     max_row = row
                     max_column = column
                     loop_break = 1
@@ -286,16 +329,16 @@ while not done:
         for row in range(0,10):
             for column in range(0,10):
                 if max_val != 0:
-                    intensity = (screen_grid[row][column][1]*255)/max_val
+                    intensity = (screen_grid[row][column]["score"]*255)/max_val
                 elif max_val == 0:
                     intensity = 0
                 color = (0,intensity,255-intensity)
                 #color = (0,intensity,0)
                 if row == max_row and column == max_column:
                     color = HOT_PINK
-                if screen_grid[row][column][0] == 1:
+                if screen_grid[row][column]["shot"] == "miss":
                     color = WHITE
-                elif screen_grid[row][column][0] == 3:
+                elif screen_grid[row][column]["shot"] == "hit":
                     color = RED
                 pygame.draw.rect(screen, color, [2*UNIT+(UNIT * column) , (2*UNIT)+UNIT * row, BLOCK_SIZE, BLOCK_SIZE])
 
@@ -303,19 +346,19 @@ while not done:
             for column in range(0,10):
                 color = DARK_BLUE
             
-                if ocean_grid[row][column][1] == 1:
+                if ocean_grid[row][column]["shot"] == "miss":
                     color = WHITE
-                elif ocean_grid[row][column][1] == 3:
+                elif ocean_grid[row][column]["shot"] == "hit":
                     color = RED
-                elif ocean_grid[row][column][0] == 1:
+                elif ocean_grid[row][column]["has_ship"]:
                     color = GREY
                 pygame.draw.rect(screen, color, [15*UNIT + UNIT * column ,(2*UNIT)+ UNIT * row, BLOCK_SIZE, BLOCK_SIZE])
 
         font = pygame.font.SysFont('arial', math.floor(BLOCK_SIZE*0.85))
         for row in range (10):
             for column in range(10):
-                if screen_grid[row][column][0] == 0:
-                    text = font.render(str(screen_grid[row][column][1]), True, WHITE)
+                if not screen_grid[row][column]["shot"]:
+                    text = font.render(str(screen_grid[row][column]["score"]), True, WHITE)
                     screen.blit(text, [(column+2)*UNIT,(row+2)*UNIT])
 
         font = pygame.font.SysFont('arial', BLOCK_SIZE)
