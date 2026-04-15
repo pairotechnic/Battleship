@@ -32,11 +32,11 @@ turns = 0
  
 clock = pygame.time.Clock()
 
+overlap = False
+out_of_bounds = False
+
 #Place Ships (First Battleship)
 while placed != 5: 
-
-    overlap = False
-    out_of_bounds = False
 
     for event in pygame.event.get(): 
         pos = pygame.mouse.get_pos()
@@ -69,6 +69,9 @@ while placed != 5:
         ):
             column = (pos[0] - 15*UNIT)// UNIT 
             row = (pos[1] - 2*UNIT)// UNIT
+
+            overlap = False
+            out_of_bounds = False
 
             if orientation == "horizontal":
                 if column >= 11 - ship_len[placed]:
