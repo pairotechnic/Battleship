@@ -36,8 +36,11 @@ overlap = False
 out_of_bounds = False
 
 #Place Ships (First Battleship)
+
+# Runs 60 times per second due to clock.tick(60)
 while placed != 5: 
 
+    # Consumes all queued events since last frame execution of while loop above
     for event in pygame.event.get(): 
         pos = pygame.mouse.get_pos()
 
@@ -228,9 +231,9 @@ while not done:
                             if (row == ship_info[i]["row"] and column == ship_info[i]["col"] + j):
                                 check_i = i
 
-                    elif ship_info[i]["orienation"] == "vertical":
+                    elif ship_info[i]["orientation"] == "vertical":
                         for j in range (ship_info[i]["length"]):
-                            if (row == ship_info[i]["row"] + j and column == ship_info[i]["row"]):
+                            if (row == ship_info[i]["row"] + j and column == ship_info[i]["col"]):
                                 check_i = i
                                 
                 if check_i != 10:
@@ -291,19 +294,19 @@ while not done:
         for i in range(5):
             for j in range(11-ship_len[i]):
                 for k in range(10):
-                    valid_hor = 1
-                    valid_vert = 1
+                    valid_hor = True
+                    valid_vert = True
                     for inc in range (0,ship_len[i]):
-                        if screen_grid[k][j+inc]["shot"] == "miss" or screen_grid[k][j+inc]["shot"] == "hit":
-                            valid_hor = 0
-                        if screen_grid[j+inc][k]["shot"] == "miss" or screen_grid[k][j+inc]["shot"] == "hit":
-                            valid_vert = 0
+                        if screen_grid[k][j+inc]["shot"] == "miss":
+                            valid_hor = False
+                        if screen_grid[j+inc][k]["shot"] == "miss":
+                            valid_vert = False
 
-                    if valid_hor == 1:
+                    if valid_hor:
                         for inc in range (0,ship_len[i]):
                             if not screen_grid[k][j+inc]["shot"]:
                                 screen_grid[k][j+inc]["score"] += 1
-                    if valid_vert == 1:
+                    if valid_vert:
                         for inc in range (0,ship_len[i]):
                             if not screen_grid[j+inc][k]["shot"]:
                                 screen_grid[j+inc][k]["score"] += 1
