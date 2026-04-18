@@ -6,9 +6,9 @@ from datetime import datetime
 import pygame
 
 # Local Application Imports
-from ai.probability import compute_probability_grid, get_best_move
-from core.config import *
-from core.board import create_ocean_grid, create_screen_grid, create_ship_info
+from prototype.ai.probability import compute_probability_grid, get_best_move
+from prototype.core.config import *
+from prototype.core.board import create_ocean_grid, create_screen_grid, create_ship_info
 
 ocean_grid = create_ocean_grid()
 screen_grid = create_screen_grid()
