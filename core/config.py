@@ -23,7 +23,9 @@ BLOCK_VAL = 0
 LEFT = 1
 RIGHT = 3
 
-ship_len = [5, 4, 3, 3, 2]
+ship_lengths = [5, 4, 3, 3, 2]
  
 Letter = ['A','B','C','D','E','F','G','H','I','J']
 Number = ['1','2','3','4','5','6','7','8','9','10']
+
+grid_size = 10

@@ -18,7 +18,6 @@ def create_screen_grid():
         for col in range(10):
             grid[row].append({
                 "shot": None,   # None | "miss" | "hit"
-                "score": 0      # probability score
             })
     return grid
 
